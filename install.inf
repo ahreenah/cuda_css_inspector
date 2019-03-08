@@ -1,0 +1,11 @@
+[info]
+title=CSS Inspector
+desc=Some description
+type=cudatext-plugin
+subdir=cuda_css_inspector
+homepage=
+lexers=HTML
+
+[item1]
+section=events
+events=on_caret
