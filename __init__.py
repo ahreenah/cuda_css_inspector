@@ -29,8 +29,6 @@ class Command:
         app_proc(PROC_SIDEPANEL_ACTIVATE, 'CSS Inspector')
        
     def config(self):
-        ini_write(fn_config, 'op', 'option_int', str(option_int))
-        ini_write(fn_config, 'op', 'option_bool', bool_to_str(option_bool))
         file_open(fn_config)
 
     def on_caret(self, ed_self):

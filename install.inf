@@ -9,6 +9,4 @@ lexers=HTML
 [item1]
 section=events
 events=on_caret
-
-[item3]
 lexers=HTML
