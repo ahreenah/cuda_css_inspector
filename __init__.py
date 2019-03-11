@@ -22,7 +22,6 @@ class Command:
         dlg_proc(self.panel, DLG_CTL_PROP_SET, index=self.label, prop={
           'x':3,
           'y':3,
-          #'color_font':55555555,  
           'cap':'test\nku',
         })
         app_proc(PROC_SIDEPANEL_ADD_DIALOG, ('CSS Inspector', self.panel, fn_icon) )
@@ -48,6 +47,24 @@ class Command:
             css=cssselect.CSSSelector('style')(tree)
             for i in css:
                 csscode+=i.text   # получен текст всех тегов style
+            
+            print('tmp')
+            
+            
+            css_links=[]
+            linkedcss=cssselect.CSSSelector('link')(tree)
+            for i in linkedcss:
+                if i.attrib['rel']=='stylesheet':
+                    css_links.append(i.attrib['href'])
+            
+            for i in css_links:
+                try:
+                    f=open(i)
+                    csscode+=f.read()
+                    print(f.read())
+                except:
+                    print('cannot open css file '+i)
+                pass 
             
             csscodeold=csscode
             csscode=''
