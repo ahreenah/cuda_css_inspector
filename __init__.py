@@ -64,6 +64,12 @@ class Command:
                     print(f.read())
                 except:
                     print('cannot open css file '+i)
+                try:
+                    f=open(os.path.dirname(ed.get_filename())+os.sep+i)
+                    csscode+=f.read()
+                    print(f.read())
+                except:
+                    print('cannot open css file '+i)
                 pass 
             
             csscodeold=csscode
