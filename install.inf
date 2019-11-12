@@ -4,6 +4,7 @@ desc=Plugin shows in HTML document CSS properties of current tag
 type=cudatext-plugin
 subdir=cuda_css_inspector
 homepage=https://github.com/medvosa/cuda_css_inspector
+api=1.0.302
 
 [item1]
 section=events

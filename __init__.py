@@ -15,16 +15,9 @@ fn_config = os.path.join(app_path(APP_DIR_SETTINGS), 'cuda_css_inspector.ini')
 fn_icon = os.path.join(os.path.dirname(__file__), 'icon.png')
 
 TITLE = 'CSS Inspector'
-PANEL_COLOR_BG = 0xFFFFFF
-PANEL_COLOR_FONT = 0x0
-
-ui = app_proc(PROC_THEME_UI_DATA_GET, '')
-for c in ui:
-    if c['name'] == 'EdTextBg':
-        PANEL_COLOR_BG = c['color']
-    if c['name'] == 'EdTextFont':
-        PANEL_COLOR_FONT = c['color']
-
+ui = app_proc(PROC_THEME_UI_DICT_GET, '')
+PANEL_COLOR_BG = ui['EdTextBg']['color']
+PANEL_COLOR_FONT = ui['EdTextFont']['color']
 
 class Command:
 
