@@ -1,85 +1,94 @@
+import sys
 import os
 from cudatext import *
-import sys
 from io import StringIO
 
+# on Unix user must install libs by "pip3 install ....."
+# on Win: plugin uses local libs
+if os.name=='nt':
+    sys.path.append(os.path.dirname(__file__))
 
-sys.path.append(os.path.dirname(__file__))
+from lxml import etree
+from lxml import cssselect
 
 fn_config = os.path.join(app_path(APP_DIR_SETTINGS), 'cuda_css_inspector.ini')
 fn_icon = os.path.join(os.path.dirname(__file__), 'icon.png')
 
-def bool_to_str(v): return '1' if v else '0'
-def str_to_bool(s): return s=='1'
+TITLE = 'CSS Inspector'
+PANEL_COLOR_BG = 0xFFFFFF
+PANEL_COLOR_FONT = 0x0
+
+ui = app_proc(PROC_THEME_UI_DATA_GET, '')
+for c in ui:
+    if c['name'] == 'EdTextBg':
+        PANEL_COLOR_BG = c['color']
+    if c['name'] == 'EdTextFont':
+        PANEL_COLOR_FONT = c['color']
+
 
 class Command:
-    
+
     def __init__(self):
         self.panel = dlg_proc(0, DLG_CREATE)
         dlg_proc(self.panel, DLG_PROP_SET,prop={
-        })	
+            'color': PANEL_COLOR_BG,
+        })
         self.label = dlg_proc(self.panel,DLG_CTL_ADD,'label')
         dlg_proc(self.panel, DLG_CTL_PROP_SET, index=self.label, prop={
-          'x':3,
-          'y':3,
-          'cap':'test\nku',
+            'x':3,
+            'y':3,
+            'cap':'?',
+            'font_color': PANEL_COLOR_FONT,
         })
-        app_proc(PROC_SIDEPANEL_ADD_DIALOG, ('CSS Inspector', self.panel, fn_icon) )
-        app_proc(PROC_SIDEPANEL_ACTIVATE, 'CSS Inspector')
-       
+        app_proc(PROC_SIDEPANEL_ADD_DIALOG, (TITLE, self.panel, fn_icon) )
+
+    def show_panel(self):
+        app_proc(PROC_SIDEPANEL_ACTIVATE, TITLE)
+
     def config(self):
         file_open(fn_config)
 
     def on_caret(self, ed_self):
-        from lxml import etree
-        from lxml import cssselect 
-        car = ed_self.get_carets()[0]
-        f=StringIO(ed_self.get_text_substr(0,0,car[0],car[1]))
-        tree=etree.parse(f,etree.HTMLParser())
+
+        # get text until closing >
+        x, y, x1, y1 = ed_self.get_carets()[0]
+        text = ed_self.get_text_substr(0, 0, 0, y)
+        s = ed_self.get_text_line(y)
+        while x<len(s) and s[x]!='>':
+            x+=1
+        text += '\n'+s[:x+1]
+
+        tree=etree.parse(StringIO(text),etree.HTMLParser())
         try:
             root=tree.getroot()[-1]
             while(len(root.getchildren())>0):
                 root=root.getchildren()[-1]
-            
-            # получены все свойства последнего тега до курсора
-            
+
             csscode=''
             css=cssselect.CSSSelector('style')(tree)
             for i in css:
-                csscode+=i.text   # получен текст всех тегов style
-            
-            print('tmp')
-            
-            
+                csscode+=i.text
+
             css_links=[]
             linkedcss=cssselect.CSSSelector('link')(tree)
             for i in linkedcss:
                 if i.attrib['rel']=='stylesheet':
                     css_links.append(i.attrib['href'])
-            
-            for i in css_links:
-                try:
-                    f=open(i)
-                    csscode+=f.read()
-                    print(f.read())
-                except:
-                    print('cannot open css file '+i)
-                try:
-                    f=open(os.path.dirname(ed.get_filename())+os.sep+i)
-                    csscode+=f.read()
-                    print(f.read())
-                except:
-                    print('cannot open css file '+i)
-                pass 
-            
+
+            dir_ed = os.path.dirname(ed.get_filename())
+            for fn in css_links:
+                fn = os.path.join(dir_ed, fn)
+                if os.path.isfile(fn):
+                    csscode += '\n'+open(fn, encoding='utf8').read()+'\n'
+
             csscodeold=csscode
             csscode=''
             for i in csscodeold:
                 if i in ['\t']:
                     pass
                 else:
-                    csscode+=(i)  # из вcех тегов style убраны табы, пробелы и ентеры
-            
+                    csscode+=(i)
+
             csscodeold=csscode
             csscode=''
             for i in csscodeold.split('\n'):
@@ -90,11 +99,11 @@ class Command:
                         i=i[:-1]
                     else: break
                 csscode=csscode+i
-            
+
             cssarr=csscode.split('}')[:-1]
             for i in range(len(cssarr)):
                 cssarr[i]=[cssarr[i].split('{')[0].split(' '),cssarr[i].split('{')[1]]
-            
+
             res=''
             for i in cssarr:
                 if 'class' in root.attrib and '.'+root.attrib['class'] in i[0]:
@@ -105,14 +114,14 @@ class Command:
                     res+=i[1]
             if 'style' in root.attrib:
                 res+=root.attrib['style']
-                
-            pos = car[:2]
-            
+
             while(';' in res):
                 res = res.replace(';','\n')
-            
+
             dlg_proc(self.panel, DLG_CTL_PROP_SET, index=self.label, prop={
-              'cap':res+'\n',
+              'cap': '<%s>\n%s' % (root.tag, res),
             })
         except:
-            pass
+            dlg_proc(self.panel, DLG_CTL_PROP_SET, index=self.label, prop={
+              'cap':'?',
+            })

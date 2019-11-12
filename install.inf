@@ -1,12 +1,16 @@
 [info]
 title=CSS Inspector
-desc=Some description
+desc=Plugin shows in HTML document CSS properties of current tag
 type=cudatext-plugin
 subdir=cuda_css_inspector
-homepage=
-lexers=HTML
+homepage=https://github.com/medvosa/cuda_css_inspector
 
 [item1]
 section=events
 events=on_caret
 lexers=HTML
+
+[item2]
+section=commands
+caption=CSS Inspector
+method=show_panel
